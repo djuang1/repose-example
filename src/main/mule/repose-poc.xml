@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:s3="http://www.mulesoft.org/schema/mule/s3"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:java="http://www.mulesoft.org/schema/mule/java" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+
+
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="df2a7551-b58e-47d7-8efc-062e52ffbbd4" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:request-config name="Repose_Request_configuration" doc:name="HTTP Request configuration" doc:id="24ba17f1-28ef-4595-97c3-92076137f310" >
+		<http:request-connection host="127.0.0.1" port="8088" />
+	</http:request-config>
+	<flow name="repose-pocFlow" doc:id="9c43d75a-513b-4d9c-b2ac-dbdf28fda4a7" >
+		<http:listener doc:name="/setup" doc:id="36f8b924-0ac9-4b38-b095-797cb966c4f6" config-ref="HTTP_Listener_config" path="/setup"/>
+		<set-variable value='#["${mule.home}/apps/${app.name}/"]' doc:name="home" doc:id="3fc9dd30-d0f2-4ffb-a343-0452eadb8b88" variableName="home"/>
+		<parse-template doc:name="Parse Template" doc:id="e69bdf78-f881-4369-adb4-4dc6f94aabf8" location="templates/container.cfg.xml"/>
+		<file:write doc:name="Write" doc:id="30451d4f-8184-47ec-bf94-c58c7af284ab" path='#["${mule.home}/apps/${app.name}/repose/container.cfg.xml"]'/>
+		<parse-template doc:name="Parse Template" doc:id="7a0a9290-f6e8-4c92-8844-318981b1a247" location="templates/log4j2.xml"/>
+		<file:write doc:name="Write" doc:id="b329440a-8a67-4e9b-8188-faaa1e2c8abc" path='#["${mule.home}/apps/${app.name}/repose/log4j2.xml"]'/>
+	</flow>
+	<flow name="repose-pocFlow4" doc:id="0d8f6f43-aad9-4e5b-bf47-477925d14722" >
+		<http:listener doc:name="/upload" doc:id="c8bfc546-d459-4f3c-b984-bdd136cc96ce" config-ref="HTTP_Listener_config" path="/upload"/>
+		<logger level="INFO" doc:name="Logger" doc:id="10162372-10dc-4d9e-8da6-de66da55a835" />
+		<file:write doc:name="Write" doc:id="54da99ea-3d6a-4aa3-b1a7-8d9b460a879d" path='#["${mule.home}/apps/${app.name}/repose/system-model.cfg.xml"]'/>
+	</flow>
+	<flow name="repose-pocFlow3" doc:id="28732bcb-4167-41d7-91d8-704facb76bc4" >
+		<http:listener doc:name="/" doc:id="30802580-5cee-499f-b751-556fce8dcd35" config-ref="HTTP_Listener_config" path="/">
+			<http:response >
+				<http:headers>#[vars.outboundHeaders default {}]</http:headers>
+			</http:response>
+		</http:listener>
+		<http:request method="GET" doc:name="Request" doc:id="c38a7bdf-fbea-4646-96f1-65ad8661fd4f" config-ref="Repose_Request_configuration" path="/"/>
+		<set-variable value="#[(vars.outboundHeaders default {}) ++ attributes.headers]" doc:name="Set Variable" doc:id="97f2d7a7-d7d5-482c-a2be-19752b5a41e5" variableName="outboundHeaders"/>
+	</flow>
+	<flow name="repose-pocFlow1" doc:id="8df9cfed-3ce0-410b-9ac2-4d10b45927ea" >
+		<http:listener doc:name="/hello" doc:id="0be8221e-41ec-45f4-85cb-67de5021e47d" config-ref="HTTP_Listener_config" path="/hello"/>
+		<ee:transform doc:name="Transform Message" doc:id="00300637-1dcc-4bf3-9ae8-b69ab6a76426" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	Status: "Hello Repose!"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="java-code-exampleFlow" doc:id="f6046b94-6595-4ae4-b7d4-dff824479444" >
+		<http:listener doc:name="/run" doc:id="85f469fb-d20b-4d43-b8e7-63626176e84f" config-ref="HTTP_Listener_config" path="/run"/>
+		<set-variable value="#[attributes.queryParams.command]" doc:name="command" doc:id="2c819357-4070-48fd-9789-353e0a9925ba" variableName="command"/>
+		<set-variable value='#["${mule.home}/apps/${app.name}/"]' doc:name="home" doc:id="c0644da3-8117-44fa-8e13-4c2a008cad7e" variableName="home"/>
+		<async doc:name="Async" doc:id="ecdb735e-b1e0-4b5e-b9d3-129c80b40046" >
+			<java:new doc:name="New" doc:id="99d87490-0485-4bb1-960f-0efa80f4cf1a" class="com.dejim.SysCommand" constructor="SysCommand()" />
+			<java:invoke doc:name="Invoke" doc:id="bdcc81d5-1df2-4199-a7b6-ae9a5a7c5158" instance="#[payload]" class="com.dejim.SysCommand" method="process(java.lang.String,java.lang.String)">
+			<java:args><![CDATA[#[output application/java
+---
+{
+	arg0: vars.command default "",
+	arg1: vars.home
+}]]]></java:args>
+		</java:invoke>
+			<logger level="INFO" doc:name="Logger" doc:id="bf43a3c4-fad4-4bee-8783-174fbf72bdcf" message="#[payload]"/>
+		</async>
+		<ee:transform doc:name="Transform Message" doc:id="5f0902dc-4e99-4a23-b193-cc2b2cb3c08a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	Status: "Running command " ++ (vars.command default "")
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="repose-pocFlow5" doc:id="78bc0c63-cecb-4ecb-a0e3-09a5eaa9923f" >
+		<http:listener doc:name="/stop" doc:id="4499c9e2-62b6-46af-ac6e-e38123b107d4" config-ref="HTTP_Listener_config" path="/stop"/>
+		<java:new doc:name="New" doc:id="07e58066-cb7d-44e0-bade-4e14d56c6be2" class="com.dejim.SysCommand" constructor="SysCommand()"/>
+		<java:invoke method="stopProcess(java.lang.String)" doc:name="Invoke" doc:id="a8d71ecd-7dda-4573-abef-52d3a86a7b01" class="com.dejim.SysCommand" instance="#[payload]">
+			<java:args ><![CDATA[#[output application/java
+---
+{
+	arg0: "Stop"
+}]]]></java:args>
+		</java:invoke>
+		<ee:transform doc:name="Transform Message" doc:id="526cce8c-3687-43aa-9425-212bae640ace" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Status": payload
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="repose-pocFlow2" doc:id="4b39ab99-cc66-4669-adec-4d281e99d996" >
+		<http:listener doc:name="/logs" doc:id="3653d30e-8aad-43d1-bb82-4224f2e628db" config-ref="HTTP_Listener_config" path="/logs"/>
+		<file:read doc:name="Read" doc:id="fc61958c-5003-4e16-8e67-fb7169b09555" path='#["${mule.home}/apps/${app.name}/repose-logs/current.log"]'/>
+		<ee:transform doc:name="Transform Message" doc:id="a132bcda-7efc-4e1c-b344-1223e73a3376" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output text/plain
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

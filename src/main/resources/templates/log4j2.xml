@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration monitorInterval="15" packages="org.apache.logging.log4j.flume.appender">
+    <Appenders>
+        <Console name="STDOUT">
+            <PatternLayout pattern="%d %-4r [%t] %-5p %c - %m%n"/>
+        </Console>
+         
+        <RollingFile name="RollingFile" fileName="#[vars.home]repose-logs/current.log"
+                     filePattern="#[vars.home]repose-logs/current-%d{yyyy-MM-dd_HHmmss}.log">
+            <PatternLayout pattern="Trans-Id:%X{traceGuid} - %d %-4r [%t] %-5p %c - %m%n"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="200 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="2"/>
+        </RollingFile>
+        <!--
+        <RollingFile name="file" fileName="${sys:mule.home}${sys:file.separator}logs${sys:file.separator}java-code-example.log" 
+                 filePattern="${sys:mule.home}${sys:file.separator}logs${sys:file.separator}java-code-example-%i.log">
+            <PatternLayout pattern="%-5p %d [%t] [event: %X{correlationId}] %c: %m%n" />
+            <SizeBasedTriggeringPolicy size="10 MB" />
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+        -->
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="STDOUT"/>
+            <AppenderRef ref="RollingFile"/>
+        </Root>
+        <Logger name="com.sun.jersey" level="off"/>
+        <Logger name="net.sf.ehcache" level="error"/>
+        <Logger name="org.apache" level="warn"/>
+        <Logger name="org.apache.http.wire" level="trace">
+            <Filters>
+                <ContextMapFilter onMatch="ACCEPT" onMismatch="NEUTRAL">
+                    <KeyValuePair key="x-trace-request" value="true"/>
+                </ContextMapFilter>
+                <ThresholdFilter level="WARN" onMatch="NEUTRAL" onMismatch="DENY"/>
+            </Filters>
+        </Logger>
+        <Logger name="org.eclipse.jetty" level="warn"/>
+        <Logger name="org.springframework" level="warn"/>
+        <Logger name="intrafilter-logging" level="trace">
+            <ContextMapFilter onMatch="ACCEPT" onMismatch="DENY">
+                <KeyValuePair key="x-trace-request" value="true"/>
+            </ContextMapFilter>
+        </Logger>
+        <Logger name="filter-timing" level="trace">
+            <ContextMapFilter onMatch="ACCEPT" onMismatch="DENY">
+                <KeyValuePair key="x-trace-request" value="true"/>
+            </ContextMapFilter>
+        </Logger>
+        <Logger name="org.openrepose.commons.utils.servlet.http.HttpServletResponseWrapper.headerWarning" level="warn"/>
+        <!--
+        <Logger name="phone-home-message" level="info" additivity="false">
+            <AppenderRef ref="PhoneHomeMessages"/>
+        </Logger>
+        -->
+    </Loggers>
+</Configuration>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<system-model xmlns="http://docs.openrepose.org/repose/system-model/v2.0">
+    <nodes>
+        <node id="repose_node1" hostname="localhost" http-port="8088"/>
+    </nodes>
+    <filters>  
+        <filter name="add-header" />  
+    </filters>
+    <destinations>
+        <endpoint id="cloudhub" protocol="http" hostname="localhost" root-path="/hello" port="8081" default="true"/>
+    </destinations>
+</system-model>

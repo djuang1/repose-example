@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- To configure Repose see: http://www.openrepose.org/versions/9.1.0.0/index.html -->
+<repose-container xmlns='http://docs.openrepose.org/repose/container/v2.0'>
+    <deployment-config http-port="8088">
+        <deployment-directory auto-clean="false">#[vars.home]repose</deployment-directory>
+        <artifact-directory check-interval="60000">#[vars.home]filters</artifact-directory>
+        <logging-configuration href="file://#[vars.home]repose/log4j2.xml"/>
+        <!-- IF using Repose for SSL termination,
+             THEN it is highly recommended that you limit the allowed Ciphers and Protocols. -->
+        <!--ssl-configuration>
+            <keystore-filename>keystore.jks</keystore-filename>
+            <keystore-password>password</keystore-password>
+            <key-password>password</key-password>
+            <!- - include only the recommended protocols and ciphers - ->
+            <included-protocols>
+                <protocol>TLSv1.2</protocol>
+            </included-protocols>
+            <included-ciphers>
+                <!- - This allows only the following:
+                        - TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
+                        - TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
+                        - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+                        - TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
+                        - TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384
+                        - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+                - ->
+                <cipher>TLS_ECDHE_RSA_WITH_AES_(128|256)_(CBC|GCM)_SHA(256|384)?</cipher>
+                <!- - The opening ^ and closing $ are assumed and will cause failure if present. - ->
+            </included-ciphers>
+            <tls-renegotiation-allowed>false</tls-renegotiation-allowed>
+        </ssl-configuration-->
+    </deployment-config>
+</repose-container>
